@@ -6,8 +6,8 @@ public class Heartbeat : MonoBehaviour
     public Transform ringSprite;
 
     public float baseScale = 1.0f;
-    public float pulseMaxScale = 1.32f;
-    public float targetRingScale = 1.65f;
+    public float pulseMaxScale = 1.2f;
+    public float targetRingScale = 0.95f;
 
     public Color normalHeartColor = Color.white;
     public Color hitPerfectColor = new Color(1f, 0.9f, 0.45f, 1f);
@@ -26,36 +26,20 @@ public class Heartbeat : MonoBehaviour
 
     void Awake()
     {
-        SetupHeartVisuals();
+        if (heartSprite != null)
+        {
+            heartSprite.gameObject.SetActive(false);
+        }
+        Transform childHeart = transform.Find("HeartVisual");
+        if (childHeart != null)
+        {
+            childHeart.gameObject.SetActive(false);
+        }
+
         SetupTargetJudgmentRing();
 
         currentHeartScale = baseScale;
         currentRingScale = targetRingScale;
-    }
-
-    void SetupHeartVisuals()
-    {
-        if (heartSprite == null)
-        {
-            GameObject hObj = new GameObject("HeartVisual");
-            hObj.transform.SetParent(transform);
-            hObj.transform.localPosition = Vector3.zero;
-            heartSprite = hObj.transform;
-        }
-        else
-        {
-            heartSprite.localPosition = Vector3.zero;
-        }
-
-        heartRenderer = heartSprite.GetComponent<SpriteRenderer>();
-        if (heartRenderer == null)
-        {
-            heartRenderer = heartSprite.gameObject.AddComponent<SpriteRenderer>();
-        }
-
-        heartRenderer.sprite = ProceduralVisuals.GetHeartSprite();
-        heartRenderer.sortingOrder = 10;
-        heartRenderer.color = normalHeartColor;
     }
 
     void SetupTargetJudgmentRing()
@@ -70,6 +54,7 @@ public class Heartbeat : MonoBehaviour
         else
         {
             ringSprite.localPosition = Vector3.zero;
+            ringSprite.gameObject.SetActive(true);
         }
 
         ringRenderer = ringSprite.GetComponent<SpriteRenderer>();
@@ -80,7 +65,7 @@ public class Heartbeat : MonoBehaviour
 
         ringRenderer.sprite = ProceduralVisuals.GetTargetRingSprite();
         ringRenderer.sortingOrder = 5;
-        ringRenderer.color = new Color(1f, 0.95f, 0.8f, 0.85f);
+        ringRenderer.color = new Color(1f, 0.95f, 0.8f, 0.75f);
         ringSprite.localScale = Vector3.one * targetRingScale;
     }
 
@@ -95,11 +80,10 @@ public class Heartbeat : MonoBehaviour
             heartSprite.localScale = Vector3.one * currentHeartScale;
         }
 
-        currentRingScale = Mathf.Lerp(currentRingScale, targetRingScale, Time.deltaTime * 5.5f);
+        currentRingScale = targetRingScale;
         if (ringSprite != null)
         {
-            float breathe = currentRingScale + Mathf.Sin(Time.time * 2.8f) * 0.025f;
-            ringSprite.localScale = Vector3.one * breathe;
+            ringSprite.localScale = Vector3.one * currentRingScale;
         }
 
         if (flashTimer > 0f)
@@ -136,7 +120,9 @@ public class Heartbeat : MonoBehaviour
         }
     }
 
-    public PulseRing SpawnPulseRing(float expandSpeed)
+    public Color normalRingColor = new Color(1f, 0.95f, 0.8f, 0.75f);
+
+    public PulseRing SpawnPulseRing(float expandSpeed, float startScale = 0.15f, Color? color = null)
     {
         GameObject ringObj = new GameObject("PulseRing");
         ringObj.transform.position = transform.position;
@@ -144,7 +130,8 @@ public class Heartbeat : MonoBehaviour
         PulseRing pulse = ringObj.AddComponent<PulseRing>();
         Sprite spriteToUse = ProceduralVisuals.GetGlowRingSprite();
 
-        pulse.Initialize(spriteToUse, 0.2f, targetRingScale, expandSpeed, new Color(1f, 0.45f, 0.65f, 0.8f));
+        Color col = color ?? new Color(1f, 0.45f, 0.65f, 0.8f);
+        pulse.Initialize(spriteToUse, startScale, targetRingScale, expandSpeed, col);
         return pulse;
     }
 
@@ -263,15 +250,15 @@ public class PulseRing : MonoBehaviour
                 if (spriteRenderer != null) spriteRenderer.color = baseColor;
             }
 
-            if (currentScale > targetScale * 1.25f)
+            if (currentScale >= targetScale)
             {
                 OnAutoMiss();
             }
         }
         else
         {
-            alpha -= Time.deltaTime * 3.2f;
-            currentScale += expandSpeed * 0.4f * Time.deltaTime;
+            alpha -= Time.deltaTime * 3.5f;
+            currentScale += expandSpeed * 0.3f * Time.deltaTime;
             transform.localScale = Vector3.one * currentScale;
 
             if (spriteRenderer != null)

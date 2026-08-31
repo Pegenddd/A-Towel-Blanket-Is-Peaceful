@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,24 +13,33 @@ public class HeartbeatManager : MonoBehaviour
     public float overlayLerpSpeed = 3.5f;
 
     [Range(0, 100)] public float currentWillpower = 85f;
-    public float decayRate = 6.0f;
-    public float willpowerGainPerfect = 14f;
-    public float willpowerGainGood = 8f;
-    public float willpowerPenaltyMiss = 10f;
+    public float decayRate = 4.0f;
+    public float willpowerGainPerfect = 12f;
+    public float willpowerGainGood = 7f;
+    public float willpowerPenaltyMiss = 7f;
 
-    public float baseBeatInterval = 1.2f;
-    public float fastBeatInterval = 0.8f;
-    public float ringExpandSpeed = 1.6f;
-    public float hitTolerance = 0.32f;
+    public float baseBeatInterval = 1.25f;
+    public float fastBeatInterval = 0.75f;
+    public float ringExpandSpeed = 1.2f;
+    public float hitTolerance = 0.22f;
     private float beatTimer = 0f;
     private float currentBeatInterval = 1.2f;
 
-    public int score = 0;
-    public int scoreGainPerfect = 100;
-    public int scoreGainGood = 50;
-
     public AudioSource heartbeatSource;
     public AudioClip heartBeatClip;
+
+    [Header("Object Positions & Sizes")]
+    public Vector3 ekgPosition       = new Vector3(-5.5f, -2.4f, 0f);
+    public float ekgWidth            = 4.5f;
+    public float ekgHeight           = 0.8f;
+    public Vector3 heartPosition     = new Vector3(-5.5f, -3.6f, 0f);
+    public Vector3 characterPosition = new Vector3(-5.5f, -4.5f, 0f);
+
+    [Header("Ring Customization")]
+    public float ringScale           = 0.95f;
+    public Color targetRingColor     = new Color(1f, 0.95f, 0.8f, 0.75f);
+    public Color pulseRingColor      = new Color(1f, 0.45f, 0.65f, 0.8f);
+    public float pulseStartScale     = 0.15f;
 
     private List<PulseRing> activeRings = new List<PulseRing>();
     private float targetOverlayAlpha = 0f;
@@ -65,7 +73,20 @@ public class HeartbeatManager : MonoBehaviour
         if (FindFirstObjectByType<EKGMonitor>() == null)
         {
             GameObject ekgObj = new GameObject("EKG_Monitor");
-            ekgObj.AddComponent<EKGMonitor>();
+            EKGMonitor ekg = ekgObj.AddComponent<EKGMonitor>();
+            ekg.offset = ekgPosition;
+            ekg.transform.position = ekgPosition;
+        }
+        else
+        {
+            var ekg = FindFirstObjectByType<EKGMonitor>();
+            ekg.offset = ekgPosition;
+            ekg.transform.position = ekgPosition;
+        }
+
+        if (visualController != null)
+        {
+            visualController.transform.position = heartPosition;
         }
 
         if (FindFirstObjectByType<VisualJuice>() == null)
@@ -77,7 +98,15 @@ public class HeartbeatManager : MonoBehaviour
         if (FindFirstObjectByType<CharacterSilhouette>() == null)
         {
             GameObject charObj = new GameObject("CharacterSilhouette");
-            charObj.AddComponent<CharacterSilhouette>();
+            CharacterSilhouette cs = charObj.AddComponent<CharacterSilhouette>();
+            cs.initialPos = characterPosition;
+            cs.transform.position = characterPosition;
+        }
+        else
+        {
+            var cs = FindFirstObjectByType<CharacterSilhouette>();
+            cs.initialPos = characterPosition;
+            cs.transform.position = characterPosition;
         }
 
         if (darkOverlay != null && darkOverlay.sprite == null)
@@ -97,7 +126,6 @@ public class HeartbeatManager : MonoBehaviour
     public void StartGame()
     {
         currentWillpower = 85f;
-        score = 0;
         beatTimer = 0.4f;
         currentState = GameState.Playing;
 
@@ -145,7 +173,10 @@ public class HeartbeatManager : MonoBehaviour
         if (visualController != null)
         {
             visualController.TriggerPulse();
-            PulseRing newRing = visualController.SpawnPulseRing(ringExpandSpeed);
+            float targetScale = visualController.targetRingScale;
+            float calculatedSpeed = (targetScale - pulseStartScale) / Mathf.Max(0.2f, currentBeatInterval);
+
+            PulseRing newRing = visualController.SpawnPulseRing(calculatedSpeed, pulseStartScale, pulseRingColor);
             if (newRing != null)
             {
                 activeRings.Add(newRing);
@@ -195,7 +226,6 @@ public class HeartbeatManager : MonoBehaviour
             if (isPerfect)
             {
                 currentWillpower += willpowerGainPerfect;
-                score += scoreGainPerfect;
 
                 closestRing.OnHit(true);
                 if (visualController != null) visualController.OnHitPerfect();
@@ -204,7 +234,6 @@ public class HeartbeatManager : MonoBehaviour
             else
             {
                 currentWillpower += willpowerGainGood;
-                score += scoreGainGood;
 
                 closestRing.OnHit(false);
                 if (visualController != null) visualController.OnHitGood();
@@ -251,6 +280,26 @@ public class HeartbeatManager : MonoBehaviour
     {
         float normalizedHealth = currentWillpower / 100f;
 
+        if (visualController != null)
+        {
+            visualController.transform.position = heartPosition;
+            visualController.targetRingScale = ringScale;
+            visualController.normalRingColor = targetRingColor;
+        }
+
+        if (EKGMonitor.Instance != null)
+        {
+            EKGMonitor.Instance.transform.position = ekgPosition;
+            EKGMonitor.Instance.monitorWidth = ekgWidth;
+            EKGMonitor.Instance.monitorHeight = ekgHeight;
+        }
+
+        var cs = FindFirstObjectByType<CharacterSilhouette>();
+        if (cs != null)
+        {
+            cs.initialPos = characterPosition;
+        }
+
         if (darkOverlay != null)
         {
             targetOverlayAlpha = (currentState == GameState.GameOver) ? 0.98f : (1f - normalizedHealth * 0.92f);
@@ -265,54 +314,25 @@ public class HeartbeatManager : MonoBehaviour
         currentState = GameState.GameOver;
         currentWillpower = 0f;
 
-        Debug.Log($"[Heartbeat Game] Game Over! Final Score: {score}");
+        Debug.Log("[Heartbeat Game] Game Over!");
     }
 
     void OnGUI()
     {
-        float sw = Screen.width;
-        float sh = Screen.height;
-
-        GUIStyle styleScore = new GUIStyle(GUI.skin.label)
+        if (currentState == GameState.GameOver)
         {
-            fontSize = Mathf.Max(16, (int)(sh * 0.035f)),
-            alignment = TextAnchor.UpperLeft,
-            fontStyle = FontStyle.Bold
-        };
-        styleScore.normal.textColor = new Color(1f, 0.75f, 0.88f, 0.9f);
+            float sw = Screen.width;
+            float sh = Screen.height;
 
-        if (currentState == GameState.Playing)
-        {
-            GUI.Label(new Rect(30, 20, 300, 40), $"SCORE: {score}", styleScore);
-
-            float barWidth = Mathf.Min(380, sw * 0.52f);
-            float barHeight = 8f;
-            float barX = (sw - barWidth) / 2f;
-            float barY = sh - 42f;
-
-            GUI.color = new Color(0.18f, 0.08f, 0.14f, 0.6f);
-            GUI.DrawTexture(new Rect(barX - 2, barY - 2, barWidth + 4, barHeight + 4), Texture2D.whiteTexture);
-
-            float fillRatio = currentWillpower / 100f;
-            Color barColor = Color.Lerp(new Color(0.9f, 0.15f, 0.3f), new Color(1f, 0.58f, 0.78f), fillRatio);
-            GUI.color = barColor;
-            GUI.DrawTexture(new Rect(barX, barY, barWidth * fillRatio, barHeight), Texture2D.whiteTexture);
-            GUI.color = Color.white;
-        }
-        else if (currentState == GameState.GameOver)
-        {
             GUIStyle styleRestart = new GUIStyle(GUI.skin.label)
             {
-                fontSize = Mathf.Max(16, (int)(sh * 0.035f)),
+                fontSize = Mathf.Max(20, (int)(sh * 0.045f)),
                 alignment = TextAnchor.MiddleCenter,
                 fontStyle = FontStyle.Bold
             };
-            styleRestart.normal.textColor = new Color(1f, 0.82f, 0.92f, 0.85f);
+            styleRestart.normal.textColor = new Color(1f, 0.85f, 0.92f, 0.95f);
 
-            float cx = sw / 2f;
-            float cy = sh / 2f;
-
-            GUI.Label(new Rect(cx - 220, cy - 20, 440, 40), "[ CLICK TO RESTART ]", styleRestart);
+            GUI.Label(new Rect(0f, 0f, sw, sh), "[ CLICK TO RESTART ]", styleRestart);
         }
     }
 }
@@ -472,22 +492,16 @@ public class EKGMonitor : MonoBehaviour
 
 public class CharacterSilhouette : MonoBehaviour
 {
-    private Vector3 initialPos;
+    [HideInInspector] public Vector3 initialPos = new Vector3(0f, -2.6f, 0f);
 
     void Awake()
     {
-        transform.position = new Vector3(0f, -2.6f, 0f);
-        initialPos = transform.position;
+        transform.position = initialPos;
     }
 
     void Update()
     {
-        HeartbeatManager manager = FindFirstObjectByType<HeartbeatManager>();
-        float vitality01 = (manager != null) ? manager.currentWillpower / 100f : 1f;
-
-        float breatheSpeed = Mathf.Lerp(1.5f, 2.5f, 1f - vitality01);
-        float breatheOffset = Mathf.Sin(Time.time * breatheSpeed) * 0.05f * vitality01;
-        transform.position = initialPos + new Vector3(0f, breatheOffset, 0f);
+        transform.position = initialPos;
     }
 }
 
@@ -495,53 +509,13 @@ public class VisualJuice : MonoBehaviour
 {
     public static VisualJuice Instance { get; private set; }
 
-    private Camera targetCamera;
-    private float baseOrthoSize = 5f;
-    private Vector3 cameraInitialPos;
-    private float shakeIntensity = 0f;
-    private float shakeDecay = 6f;
-
     void Awake()
     {
         if (Instance == null) Instance = this;
-        targetCamera = Camera.main;
-        if (targetCamera != null)
-        {
-            baseOrthoSize = targetCamera.orthographicSize;
-            cameraInitialPos = targetCamera.transform.position;
-        }
-    }
-
-    void Update()
-    {
-        HeartbeatManager manager = FindFirstObjectByType<HeartbeatManager>();
-        float vitality01 = (manager != null) ? manager.currentWillpower / 100f : 1f;
-
-        UpdateCamera(vitality01);
-    }
-
-    void UpdateCamera(float vitality01)
-    {
-        if (targetCamera == null) return;
-
-        if (shakeIntensity > 0f)
-        {
-            Vector3 shakeOffset = (Vector3)Random.insideUnitCircle * shakeIntensity;
-            targetCamera.transform.position = cameraInitialPos + shakeOffset;
-            shakeIntensity = Mathf.Max(0f, shakeIntensity - Time.deltaTime * shakeDecay);
-        }
-        else
-        {
-            targetCamera.transform.position = Vector3.Lerp(targetCamera.transform.position, cameraInitialPos, Time.deltaTime * 8f);
-        }
-
-        float targetZoom = baseOrthoSize - Mathf.Sin(Time.time * 2.5f) * (0.04f + (1f - vitality01) * 0.08f);
-        targetCamera.orthographicSize = Mathf.Lerp(targetCamera.orthographicSize, targetZoom, Time.deltaTime * 4f);
     }
 
     public void AddShake(float amount)
     {
-        shakeIntensity = Mathf.Min(shakeIntensity + amount, 0.3f);
     }
 }
 
@@ -649,74 +623,8 @@ public static class ProceduralVisuals
         tex.wrapMode = TextureWrapMode.Clamp;
 
         float center = resolution / 2f;
-        float targetR = center * 0.78f;
-        float perfectTolerance = center * 0.05f;
-        float goodTolerance = center * 0.16f;
-
-        Color[] pixels = new Color[resolution * resolution];
-
-        for (int y = 0; y < resolution; y++)
-        {
-            for (int x = 0; x < resolution; x++)
-            {
-                float dx = x - center;
-                float dy = y - center;
-                float dist = Mathf.Sqrt(dx * dx + dy * dy);
-                float delta = Mathf.Abs(dist - targetR);
-
-                Color pixelColor = Color.clear;
-
-                if (delta <= goodTolerance)
-                {
-                    float perfectSharpness = Mathf.Exp(-delta * delta / (perfectTolerance * perfectTolerance * 1.8f));
-                    float goodNorm = delta / goodTolerance;
-                    float goodGlow = Mathf.Pow(1f - goodNorm, 1.6f) * 0.45f;
-
-                    float innerEdge = Mathf.Exp(-Mathf.Pow(dist - (targetR - goodTolerance * 0.85f), 2f) * 0.15f) * 0.5f;
-                    float outerEdge = Mathf.Exp(-Mathf.Pow(dist - (targetR + goodTolerance * 0.85f), 2f) * 0.15f) * 0.5f;
-
-                    float totalAlpha = Mathf.Clamp01(perfectSharpness * 0.95f + goodGlow + innerEdge + outerEdge);
-
-                    Color baseRingColor = Color.Lerp(
-                        new Color(1f, 0.95f, 0.7f),
-                        new Color(1f, 0.4f, 0.65f),
-                        goodNorm
-                    );
-
-                    float angle = Mathf.Atan2(dy, dx);
-                    float crossAlignment = Mathf.Abs(Mathf.Sin(angle * 2f));
-                    if (crossAlignment < 0.08f)
-                    {
-                        totalAlpha = Mathf.Min(1f, totalAlpha + 0.35f);
-                        baseRingColor = Color.Lerp(baseRingColor, Color.white, 0.6f);
-                    }
-
-                    baseRingColor.a = totalAlpha;
-                    pixelColor = baseRingColor;
-                }
-
-                pixels[y * resolution + x] = pixelColor;
-            }
-        }
-
-        tex.SetPixels(pixels);
-        tex.Apply();
-
-        cachedTargetRingSprite = Sprite.Create(tex, new Rect(0, 0, resolution, resolution), new Vector2(0.5f, 0.5f), 100f);
-        return cachedTargetRingSprite;
-    }
-
-    public static Sprite GetGlowRingSprite(int resolution = 256)
-    {
-        if (cachedPulseRingSprite != null) return cachedPulseRingSprite;
-
-        Texture2D tex = new Texture2D(resolution, resolution, TextureFormat.RGBA32, false);
-        tex.filterMode = FilterMode.Bilinear;
-        tex.wrapMode = TextureWrapMode.Clamp;
-
-        float center = resolution / 2f;
-        float targetR = center * 0.82f;
-        float ringThickness = center * 0.16f;
+        float targetR = center * 0.80f;
+        float ringThickness = center * 0.035f;
 
         Color[] pixels = new Color[resolution * resolution];
 
@@ -727,9 +635,55 @@ public static class ProceduralVisuals
                 float dist = Vector2.Distance(new Vector2(x, y), new Vector2(center, center));
                 float delta = Mathf.Abs(dist - targetR);
 
-                if (delta <= ringThickness)
+                if (delta <= ringThickness * 2.5f)
                 {
-                    float alpha = Mathf.Exp(-delta * delta * 0.04f);
+                    float alpha = Mathf.Exp(-delta * delta / (ringThickness * ringThickness * 1.5f));
+                    Color ringColor = Color.Lerp(
+                        new Color(1f, 0.95f, 0.7f, 0.95f),
+                        new Color(1f, 0.45f, 0.65f, 0.75f),
+                        delta / (ringThickness * 2.5f)
+                    );
+                    ringColor.a *= alpha;
+                    pixels[y * resolution + x] = ringColor;
+                }
+                else
+                {
+                    pixels[y * resolution + x] = Color.clear;
+                }
+            }
+        }
+
+        tex.SetPixels(pixels);
+        tex.Apply();
+
+        cachedTargetRingSprite = Sprite.Create(tex, new Rect(0, 0, resolution, resolution), new Vector2(0.5f, 0.5f), 100f);
+        return cachedTargetRingSprite;
+    }
+
+    public static Sprite GetGlowRingSprite(int resolution = 512)
+    {
+        if (cachedPulseRingSprite != null) return cachedPulseRingSprite;
+
+        Texture2D tex = new Texture2D(resolution, resolution, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Bilinear;
+        tex.wrapMode = TextureWrapMode.Clamp;
+
+        float center = resolution / 2f;
+        float targetR = center * 0.80f;
+        float ringThickness = center * 0.08f;
+
+        Color[] pixels = new Color[resolution * resolution];
+
+        for (int y = 0; y < resolution; y++)
+        {
+            for (int x = 0; x < resolution; x++)
+            {
+                float dist = Vector2.Distance(new Vector2(x, y), new Vector2(center, center));
+                float delta = Mathf.Abs(dist - targetR);
+
+                if (delta <= ringThickness * 2.0f)
+                {
+                    float alpha = Mathf.Exp(-delta * delta / (ringThickness * ringThickness * 0.8f));
                     pixels[y * resolution + x] = new Color(1f, 1f, 1f, alpha);
                 }
                 else
