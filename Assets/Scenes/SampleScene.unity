@@ -900,7 +900,7 @@ MonoBehaviour:
   currentWillpower: 85
   decayRate: 6
   willpowerGainPerfect: 14
-  willpowerGainGood: 8
+  willpowerGainGood: 4
   willpowerPenaltyMiss: 10
   baseBeatInterval: 1.2
   fastBeatInterval: 0.8
