@@ -689,8 +689,8 @@ MonoBehaviour:
     character: {fileID: 5761766695280783537, guid: 801419c2e03597c4ca91708687525d4d, type: 3}
     text: zzz
     textSpeed: 0.03
-    soundEffect: {fileID: 0}
-    backgroundMusic: {fileID: 0}
+    soundEffect: {fileID: 8300000, guid: 75a5dee9fbedb0a4da28e1d261f374ce, type: 3}
+    backgroundMusic: {fileID: 8300000, guid: 75a5dee9fbedb0a4da28e1d261f374ce, type: 3}
     changeMusic: 0
     nextElement: -1
     nextSceneName: 
@@ -727,7 +727,7 @@ MonoBehaviour:
     character: {fileID: 2822638334278232408, guid: e55f1f4744838db42b2227e8158cc5c0, type: 3}
     text: Wait, am I awake already?
     textSpeed: 0.03
-    soundEffect: {fileID: 0}
+    soundEffect: {fileID: 8300000, guid: 75a5dee9fbedb0a4da28e1d261f374ce, type: 3}
     backgroundMusic: {fileID: 0}
     changeMusic: 0
     nextElement: -1
@@ -763,7 +763,7 @@ MonoBehaviour:
     holdDuration: 1
   - background: {fileID: -62238127605566901, guid: 26a7218ffb05cb041810cf3f204f3e96, type: 3}
     character: {fileID: 2822638334278232408, guid: e55f1f4744838db42b2227e8158cc5c0, type: 3}
-    text: So sleeoy...
+    text: So sleepy...
     textSpeed: 0.03
     soundEffect: {fileID: 0}
     backgroundMusic: {fileID: 0}
