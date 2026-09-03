@@ -18,6 +18,12 @@ public class BranchDialogue
     public float textSpeed = 0.03f;
     public AudioClip soundEffect;
 
+    [Header("Background Music")]
+    [Tooltip("Background music to play for this branch element. Leave empty to continue current music.")]
+    public AudioClip backgroundMusic;
+    [Tooltip("Check this to stop background music during this branch element.")]
+    public bool stopMusic = false;
+
     [Header("After This Element Finishes")]
     [DialogueElementSelector]
     [Tooltip("Element in Dialogues array to jump to after this finishes. Select -1 to proceed to the next Element in the main list.")]
@@ -43,7 +49,11 @@ public class DialogueData
     public AudioClip soundEffect;
 
     [Header("Background Music")]
+    [Tooltip("Background music to play during this dialogue element. Leave empty to continue playing current music.")]
     public AudioClip backgroundMusic;
+    [Tooltip("Check this to stop background music on this element.")]
+    public bool stopMusic = false;
+    [Tooltip("Optional: toggle if you want to explicitly stop or change music.")]
     public bool changeMusic = false;
 
     [Header("Next Destination")]

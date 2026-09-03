@@ -43,12 +43,41 @@ public class DialogueManager : MonoBehaviour
         {
             choicePanel = FindFirstObjectByType<ChoicePanel>(FindObjectsInactive.Include);
         }
+        if (audioManager == null)
+        {
+            audioManager = FindFirstObjectByType<AudioManager>(FindObjectsInactive.Include);
+        }
     }
 #endif
 
     void Awake()
     {
+        EnsureAudioManager();
         EnsureChoiceUI();
+    }
+
+    public void EnsureAudioManager()
+    {
+        if (audioManager == null)
+        {
+            audioManager = AudioManager.Instance;
+        }
+
+        if (audioManager == null)
+        {
+            audioManager = FindFirstObjectByType<AudioManager>(FindObjectsInactive.Include);
+        }
+
+        if (audioManager == null)
+        {
+            GameObject amObj = new GameObject("AudioManager");
+            audioManager = amObj.AddComponent<AudioManager>();
+            audioManager.EnsureAudioSources();
+        }
+        else
+        {
+            audioManager.EnsureAudioSources();
+        }
     }
 
     void Start()
@@ -151,14 +180,28 @@ public class DialogueManager : MonoBehaviour
             }
         }
 
+        EnsureAudioManager();
+
         if (dialogue.soundEffect != null && audioManager != null)
         {
             audioManager.PlaySFX(dialogue.soundEffect);
         }
 
-        if (dialogue.changeMusic && audioManager != null)
+        // Background Music
+        if (audioManager != null)
         {
-            audioManager.PlayBGM(dialogue.backgroundMusic);
+            if (dialogue.stopMusic)
+            {
+                audioManager.StopBGM();
+            }
+            else if (dialogue.backgroundMusic != null)
+            {
+                audioManager.PlayBGM(dialogue.backgroundMusic);
+            }
+            else if (dialogue.changeMusic)
+            {
+                audioManager.StopBGM();
+            }
         }
 
         if (typingCoroutine != null)
@@ -438,9 +481,24 @@ public class DialogueManager : MonoBehaviour
             }
         }
 
+        EnsureAudioManager();
+
         if (branch.soundEffect != null && audioManager != null)
         {
             audioManager.PlaySFX(branch.soundEffect);
+        }
+
+        // Background Music for branch element
+        if (audioManager != null)
+        {
+            if (branch.stopMusic)
+            {
+                audioManager.StopBGM();
+            }
+            else if (branch.backgroundMusic != null)
+            {
+                audioManager.PlayBGM(branch.backgroundMusic);
+            }
         }
 
         if (typingCoroutine != null)
