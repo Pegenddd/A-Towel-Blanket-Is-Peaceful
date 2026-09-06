@@ -15,6 +15,9 @@ public class BranchDialogue
     [Header("Dialogue Content")]
     [TextArea(2, 5)]
     public string text;
+    [TextArea(2, 5)]
+    [Tooltip("Thai translation for this branch dialogue (optional).")]
+    public string textThai = "";
     public float textSpeed = 0.03f;
     public AudioClip soundEffect;
 
@@ -30,6 +33,15 @@ public class BranchDialogue
     public int nextElement = -1;
     [Tooltip("Scene to load after this finishes (optional).")]
     public string nextSceneName = "";
+
+    public string GetLocalizedText()
+    {
+        if (LocalizationManager.CurrentLanguage == Language.Thai && !string.IsNullOrEmpty(textThai))
+        {
+            return ThaiFontAdjuster.Adjust(textThai);
+        }
+        return text;
+    }
 }
 
 [System.Serializable]
@@ -42,6 +54,9 @@ public class DialogueData
     [Header("Dialogue")]
     [TextArea(2, 5)]
     public string text;
+    [TextArea(2, 5)]
+    [Tooltip("Thai translation for this dialogue (optional).")]
+    public string textThai = "";
 
     public float textSpeed = 0.03f;
 
@@ -67,9 +82,11 @@ public class DialogueData
     [Tooltip("If true, shows the ChoicePanel UI when text finishes typing.")]
     public bool hasChoice = false;
     public string choicePrompt = "Choose your path";
+    public string choicePromptThai = "";
 
     [Header("Click (Tap Option)")]
     public string tapChoiceText = "Tap (Click)";
+    public string tapChoiceTextThai = "";
     [DialogueElementSelector]
     [Tooltip("Target Element in Dialogues to jump to. Select -1 to proceed to next.")]
     public int tapTargetElement = -1;
@@ -80,6 +97,7 @@ public class DialogueData
 
     [Header("Click & Hold (Hold Option)")]
     public string holdChoiceText = "Hold";
+    public string holdChoiceTextThai = "";
     [DialogueElementSelector]
     [Tooltip("Target Element in Dialogues to jump to when holding. Select -1 to proceed to next.")]
     public int holdTargetElement = -1;
@@ -100,5 +118,41 @@ public class DialogueData
     {
         get => holdTargetElement;
         set => holdTargetElement = value;
+    }
+
+    public string GetLocalizedText()
+    {
+        if (LocalizationManager.CurrentLanguage == Language.Thai && !string.IsNullOrEmpty(textThai))
+        {
+            return ThaiFontAdjuster.Adjust(textThai);
+        }
+        return text;
+    }
+
+    public string GetLocalizedTapChoice()
+    {
+        if (LocalizationManager.CurrentLanguage == Language.Thai && !string.IsNullOrEmpty(tapChoiceTextThai))
+        {
+            return ThaiFontAdjuster.Adjust(tapChoiceTextThai);
+        }
+        return tapChoiceText;
+    }
+
+    public string GetLocalizedHoldChoice()
+    {
+        if (LocalizationManager.CurrentLanguage == Language.Thai && !string.IsNullOrEmpty(holdChoiceTextThai))
+        {
+            return ThaiFontAdjuster.Adjust(holdChoiceTextThai);
+        }
+        return holdChoiceText;
+    }
+
+    public string GetLocalizedChoicePrompt()
+    {
+        if (LocalizationManager.CurrentLanguage == Language.Thai && !string.IsNullOrEmpty(choicePromptThai))
+        {
+            return ThaiFontAdjuster.Adjust(choicePromptThai);
+        }
+        return choicePrompt;
     }
 }

@@ -138,14 +138,15 @@ public class ChoicePanel : MonoBehaviour
 
         if (promptText != null)
         {
-            promptText.text = string.IsNullOrEmpty(dialogue.choicePrompt)
-                ? "Choose your path (Tap or Hold)"
-                : dialogue.choicePrompt;
+            string prompt = dialogue.GetLocalizedChoicePrompt();
+            promptText.text = string.IsNullOrEmpty(prompt)
+                ? (LocalizationManager.CurrentLanguage == Language.Thai ? "เลือกเส้นทาง (กดธรรมดา หรือ กดค้าง)" : "Choose your path (Tap or Hold)")
+                : prompt;
         }
 
         if (tapChoiceText != null)
         {
-            tapChoiceText.text = dialogue.tapChoiceText;
+            tapChoiceText.text = dialogue.GetLocalizedTapChoice();
         }
         if (tapHintText != null)
         {
@@ -155,7 +156,7 @@ public class ChoicePanel : MonoBehaviour
 
         if (holdChoiceText != null)
         {
-            holdChoiceText.text = dialogue.holdChoiceText;
+            holdChoiceText.text = dialogue.GetLocalizedHoldChoice();
         }
         if (holdHintText != null)
         {

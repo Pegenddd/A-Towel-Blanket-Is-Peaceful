@@ -82,6 +82,98 @@ public class DialogueManager : MonoBehaviour
 
     void Start()
     {
+        if (SaveSystem.HasPendingResume)
+        {
+            currentDialogue = Mathf.Clamp(SaveSystem.PendingDialogueIndex, 0, dialogues != null && dialogues.Length > 0 ? dialogues.Length - 1 : 0);
+            SaveSystem.ClearPendingResume();
+            Debug.Log($"[DialogueManager] Resumed at dialogue index: {currentDialogue}");
+        }
+
+        ShowDialogue();
+    }
+
+    void OnEnable()
+    {
+        LocalizationManager.OnLanguageChanged += OnLanguageChanged;
+    }
+
+    void OnDisable()
+    {
+        LocalizationManager.OnLanguageChanged -= OnLanguageChanged;
+    }
+
+    private TMP_FontAsset defaultDialogueFont;
+    private static TMP_FontAsset cachedThaiFont;
+    private static bool thaiFontLoaded = false;
+
+    private static void EnsureThaiFontLoaded()
+    {
+        if (!thaiFontLoaded)
+        {
+            cachedThaiFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/ThaiFont_SDF");
+            if (cachedThaiFont == null)
+            {
+                cachedThaiFont = Resources.Load<TMP_FontAsset>("ThaiFont_SDF");
+            }
+            thaiFontLoaded = true;
+        }
+    }
+
+    private void UpdateDialogueFont()
+    {
+        if (dialogueText == null) return;
+
+        if (defaultDialogueFont == null)
+        {
+            defaultDialogueFont = dialogueText.font;
+        }
+
+        EnsureThaiFontLoaded();
+
+        if (LocalizationManager.CurrentLanguage == Language.Thai && cachedThaiFont != null)
+        {
+            dialogueText.font = cachedThaiFont;
+        }
+        else if (defaultDialogueFont != null)
+        {
+            dialogueText.font = defaultDialogueFont;
+        }
+    }
+
+    private void OnLanguageChanged()
+    {
+        UpdateDialogueFont();
+
+        if (!isTyping && dialogueText != null)
+        {
+            if (activeBranch != null)
+            {
+                dialogueText.text = activeBranch.GetLocalizedText();
+            }
+            else if (currentDialogue < dialogues.Length && dialogues[currentDialogue] != null)
+            {
+                dialogueText.text = dialogues[currentDialogue].GetLocalizedText();
+            }
+        }
+    }
+
+    public int GetCurrentDialogueIndex()
+    {
+        return currentDialogue;
+    }
+
+    public string GetCurrentDialogueText()
+    {
+        if (dialogues != null && currentDialogue >= 0 && currentDialogue < dialogues.Length)
+        {
+            return dialogues[currentDialogue] != null ? dialogues[currentDialogue].GetLocalizedText() : "";
+        }
+        return "";
+    }
+
+    public void SetCurrentDialogueIndex(int index)
+    {
+        currentDialogue = Mathf.Clamp(index, 0, dialogues != null && dialogues.Length > 0 ? dialogues.Length - 1 : 0);
         ShowDialogue();
     }
 
@@ -147,6 +239,7 @@ public class DialogueManager : MonoBehaviour
 
     void ShowDialogue()
     {
+        UpdateDialogueFont();
         HideChoiceUI();
         isChoiceActive = false;
         isHolding = false;
@@ -210,7 +303,7 @@ public class DialogueManager : MonoBehaviour
         }
 
         typingCoroutine = StartCoroutine(
-            TypeText(dialogue.text, dialogue.textSpeed)
+            TypeText(dialogue.GetLocalizedText(), dialogue.textSpeed)
         );
     }
 
@@ -221,9 +314,17 @@ public class DialogueManager : MonoBehaviour
         {
             dialogueText.text = "";
 
-            foreach (char letter in text)
+            for (int i = 0; i < text.Length; i++)
             {
-                dialogueText.text += letter;
+                dialogueText.text += text[i];
+
+                // Append any combining vowel or tone mark immediately without delay
+                while (i + 1 < text.Length && ThaiFontAdjuster.IsThaiCombiningMark(text[i + 1]))
+                {
+                    i++;
+                    dialogueText.text += text[i];
+                }
+
                 yield return new WaitForSeconds(speed);
             }
         }
@@ -243,11 +344,11 @@ public class DialogueManager : MonoBehaviour
         {
             if (activeBranch != null)
             {
-                dialogueText.text = activeBranch.text;
+                dialogueText.text = activeBranch.GetLocalizedText();
             }
             else if (currentDialogue < dialogues.Length)
             {
-                dialogueText.text = dialogues[currentDialogue].text;
+                dialogueText.text = dialogues[currentDialogue].GetLocalizedText();
             }
         }
 
@@ -457,6 +558,7 @@ public class DialogueManager : MonoBehaviour
 
     void PlayBranchElement(BranchDialogue branch)
     {
+        UpdateDialogueFont();
         activeBranch = branch;
         isChoiceActive = false;
         isHolding = false;
@@ -507,7 +609,7 @@ public class DialogueManager : MonoBehaviour
         }
 
         typingCoroutine = StartCoroutine(
-            TypeText(branch.text, branch.textSpeed > 0 ? branch.textSpeed : 0.03f)
+            TypeText(branch.GetLocalizedText(), branch.textSpeed > 0 ? branch.textSpeed : 0.03f)
         );
     }
 
