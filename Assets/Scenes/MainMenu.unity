@@ -2512,7 +2512,7 @@ MonoBehaviour:
   continueSubtitleText: {fileID: 1055074847}
   continueCanvasGroup: {fileID: 2101141402}
   settingsDialog: {fileID: 552169012}
-  menuBGM: {fileID: 8300000, guid: 75a5dee9fbedb0a4da28e1d261f374ce, type: 3}
+  menuBGM: {fileID: 0}
   toastRoot: {fileID: 620514864}
   toastText: {fileID: 2132928769}
 --- !u!1 &903768939
@@ -4885,7 +4885,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 2822638334278232408, guid: e55f1f4744838db42b2227e8158cc5c0, type: 3}
+  m_Sprite: {fileID: 338256702039737987, guid: 057b0ff549430f345947898bfcbe9b1b, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

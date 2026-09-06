@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using JetBrains.Annotations;
 
 public class DialogueManager : MonoBehaviour
 {
@@ -10,6 +11,9 @@ public class DialogueManager : MonoBehaviour
     public Image backgroundImage;
     public Image characterImage;
     public TMP_Text dialogueText;
+
+    [SerializeField] private bool testMode = false;
+    [SerializeField] private int testStartElement = 10;
 
     [Header("Choice UI")]
     [Tooltip("Reference to the ChoicePanel component in the Canvas.")]
@@ -82,15 +86,32 @@ public class DialogueManager : MonoBehaviour
 
     void Start()
     {
-        if (SaveSystem.HasPendingResume)
+        if (testMode)
         {
-            currentDialogue = Mathf.Clamp(SaveSystem.PendingDialogueIndex, 0, dialogues != null && dialogues.Length > 0 ? dialogues.Length - 1 : 0);
+            currentDialogue = Mathf.Clamp(
+                testStartElement,
+                0,
+                dialogues != null && dialogues.Length > 0 ? dialogues.Length - 1 : 0
+            );
+
+            Debug.Log($"[DialogueManager] TEST MODE - Starting at Element: {currentDialogue}");
+        }
+        else if (SaveSystem.HasPendingResume)
+        {
+            currentDialogue = Mathf.Clamp(
+                SaveSystem.PendingDialogueIndex,
+                0,
+                dialogues != null && dialogues.Length > 0 ? dialogues.Length - 1 : 0
+            );
+
             SaveSystem.ClearPendingResume();
+
             Debug.Log($"[DialogueManager] Resumed at dialogue index: {currentDialogue}");
         }
 
         ShowDialogue();
     }
+
 
     void OnEnable()
     {
