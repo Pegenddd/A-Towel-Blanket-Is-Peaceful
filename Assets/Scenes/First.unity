@@ -2509,12 +2509,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -3439,10 +3439,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 681154644}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.000061035, y: 0}
-  m_SizeDelta: {x: 1920, y: 1080}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &928334093
 MonoBehaviour:
@@ -4371,7 +4371,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -5470,7 +5470,7 @@ MonoBehaviour:
   englishLineSpacing: 0
   thaiLineSpacing: 10
   testMode: 0
-  testStartElement: 127
+  testStartElement: 0
   choicePanel: {fileID: 1809930548}
   tapThreshold: 0.35
   dialogues:
@@ -13186,14 +13186,14 @@ MonoBehaviour:
   keepBGMContinuous: 1
   enableIntroQuote: 1
   introQuoteEnglish: At that time, when Adam and Eve bit into the fruit of wisdom,
-    we fell from the Garden of Eden forever --------------
+    we fell from the Garden of Eden forever -----------------------------------------------------------------
   introQuoteThai: "\u0E22\u0E32\u0E21\u0E19\u0E31\u0E49\u0E19\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E2D\u0E14\u0E31\u0E21\u0E41\u0E25\u0E30\u0E2D\u0E35\u0E1F\u0E01\u0E31\u0E14\u0E1C\u0E25\u0E41\u0E2B\u0E48\u0E07\u0E1B\u0E31\u0E0D\u0E0D\u0E32
     \u0E1E\u0E27\u0E01\u0E40\u0E23\u0E32\u0E01\u0E47\u0E23\u0E48\u0E27\u0E07\u0E2B\u0E25\u0E48\u0E19\u0E08\u0E32\u0E01\u0E2A\u0E27\u0E19\u0E2D\u0E35\u0E40\u0E14\u0E19\u0E15\u0E25\u0E2D\u0E14\u0E01\u0E32\u0E25
-    -----------"
-  introQuoteEnglishFontSize: 40
-  introQuoteThaiFontSize: 55
+    -----------------------------------------------------------------"
+  introQuoteEnglishFontSize: 24
+  introQuoteThaiFontSize: 26
   introQuoteEnglishHintFontSize: 15
-  introQuoteThaiHintFontSize: 30
+  introQuoteThaiHintFontSize: 16
   introQuoteFontSize: 0
   introQuoteTextSpeed: 0.04
   introQuoteCanvasGroup: {fileID: 1965018083}
@@ -13202,10 +13202,10 @@ MonoBehaviour:
   enableEndingScreen: 1
   endingTextEnglish: The curtains still flutter overhead.
   endingTextThai: "\u0E1C\u0E49\u0E32\u0E21\u0E48\u0E32\u0E19\u0E22\u0E31\u0E07\u0E04\u0E07\u0E1B\u0E25\u0E34\u0E27\u0E44\u0E2A\u0E27\u0E2D\u0E22\u0E39\u0E48\u0E40\u0E2B\u0E19\u0E37\u0E2D\u0E2B\u0E31\u0E27"
-  endingEnglishFontSize: 55
-  endingThaiFontSize: 60
+  endingEnglishFontSize: 32
+  endingThaiFontSize: 34
   endingEnglishHintFontSize: 15
-  endingThaiHintFontSize: 20
+  endingThaiHintFontSize: 16
   endingTextFontSize: 0
   endingReturnScene: MainMenu
   endingScreenCanvasGroup: {fileID: 1186428713}
