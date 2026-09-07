@@ -33,8 +33,9 @@ public static class LocalizationManager
         { "settings_master", "Master Volume" },
         { "settings_bgm", "Music (BGM)" },
         { "settings_sfx", "Sound Effects (SFX)" },
-        { "settings_lang_header", "Language Settings" },
+        { "settings_lang_header", "Language & Text" },
         { "settings_language", "Language" },
+        { "settings_font_size", "Text Size" },
         { "settings_lang_en", "English" },
         { "settings_lang_th", "ภาษาไทย" },
         { "settings_back", "Back" },
@@ -45,7 +46,12 @@ public static class LocalizationManager
         { "pause_saved_toast", "Game Saved Successfully!" },
         { "pause_settings", "Settings" },
         { "pause_main_menu", "Main Menu" },
-        { "pause_button_hud", "Menu / Save" }
+        { "pause_button_hud", "Menu / Save" },
+
+        { "story_intro_quote", "At that time, when Adam and Eve bit into the fruit of wisdom, we fell from the Garden of Eden forever -----------------------------------------------------------------" },
+        { "story_intro_hint", "(Click to start)" },
+        { "story_ending_text", "The curtains still flutter overhead." },
+        { "story_ending_return", "Click to return to Main Menu" }
     };
 
     private static readonly Dictionary<string, string> thaiDict = new Dictionary<string, string>
@@ -64,8 +70,9 @@ public static class LocalizationManager
         { "settings_master", "ระดับเสียงหลัก" },
         { "settings_bgm", "เสียงดนตรี (BGM)" },
         { "settings_sfx", "เสียงเอฟเฟกต์ (SFX)" },
-        { "settings_lang_header", "ตั้งค่าภาษา" },
+        { "settings_lang_header", "ภาษาและขนาดข้อความ" },
         { "settings_language", "ภาษา" },
+        { "settings_font_size", "ขนาดตัวอักษร" },
         { "settings_lang_en", "English" },
         { "settings_lang_th", "ภาษาไทย" },
         { "settings_back", "ย้อนกลับ" },
@@ -76,7 +83,12 @@ public static class LocalizationManager
         { "pause_saved_toast", "บันทึกเกมเรียบร้อยแล้ว!" },
         { "pause_settings", "ตั้งค่า" },
         { "pause_main_menu", "หน้าหลัก" },
-        { "pause_button_hud", "เมนู / บันทึก" }
+        { "pause_button_hud", "เมนู / บันทึก" },
+
+        { "story_intro_quote", "ยามนั้นเมื่ออดัมและอีฟกัดผลแห่งปัญญา พวกเราก็ร่วงหล่นจากสวนอีเดนตลอดกาล -----------------------------------------------------------------" },
+        { "story_intro_hint", "(คลิกเพื่อเริ่มเรื่อง)" },
+        { "story_ending_text", "ผ้าม่านยังคงปลิวไสวอยู่เหนือหัว" },
+        { "story_ending_return", "คลิกเพื่อกลับสู่หน้าหลัก" }
     };
 
     public static Language CurrentLanguage

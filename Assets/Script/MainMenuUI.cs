@@ -34,6 +34,12 @@ public class MainMenuUI : MonoBehaviour
     {
         EnsureAudioManager();
         SetupButtons();
+
+        ChoicePanel cp = FindAnyObjectByType<ChoicePanel>(FindObjectsInactive.Include);
+        if (cp != null)
+        {
+            cp.gameObject.SetActive(false);
+        }
     }
 
     void Start()
@@ -43,6 +49,10 @@ public class MainMenuUI : MonoBehaviour
         if (menuBGM != null && AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayBGM(menuBGM);
+        }
+        else if (AudioManager.Instance != null && AudioManager.Instance.defaultBGM != null && !AudioManager.Instance.IsBGMPlaying())
+        {
+            AudioManager.Instance.PlayBGM(AudioManager.Instance.defaultBGM);
         }
 
         if (toastRoot != null)

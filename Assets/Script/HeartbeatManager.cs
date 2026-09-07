@@ -138,6 +138,8 @@ public class HeartbeatManager : MonoBehaviour
 
     void Update()
     {
+        if (Time.timeScale <= 0f || SettingsUI.IsOpen) return;
+
         if (currentState == GameState.Title || currentState == GameState.GameOver)
         {
             if (Input.GetMouseButtonDown(0))

@@ -17,6 +17,18 @@ public static class ChoicePanelAutoBuilder
         if (Application.isPlaying) return;
 
         DialogueManager dm = Object.FindFirstObjectByType<DialogueManager>();
+        if (dm == null)
+        {
+            // If ChoicePanel was mistakenly created in a non-dialogue scene (like MainMenu), remove it!
+            ChoicePanel strayCp = Object.FindFirstObjectByType<ChoicePanel>(FindObjectsInactive.Include);
+            if (strayCp != null)
+            {
+                Undo.DestroyObjectImmediate(strayCp.gameObject);
+                EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            }
+            return;
+        }
+
         ChoicePanel cp = Object.FindFirstObjectByType<ChoicePanel>();
         AudioManager am = Object.FindFirstObjectByType<AudioManager>();
 

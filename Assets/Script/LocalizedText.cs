@@ -8,6 +8,19 @@ public class LocalizedText : MonoBehaviour
     public string prefix = "";
     public string suffix = "";
 
+    [Header("Language Specific Font Size")]
+    [Tooltip("Font size when language is English (0 = keep current/default)")]
+    public float englishFontSize = 0f;
+    [Tooltip("Font size when language is Thai (0 = keep current/default)")]
+    public float thaiFontSize = 0f;
+
+    [Header("Language Specific Line Spacing")]
+    public float englishLineSpacing = 0f;
+    public float thaiLineSpacing = 0f;
+
+    [Header("Settings Scaling")]
+    public bool scaleWithSettings = false;
+
     private TMP_Text textComponent;
     private TMP_FontAsset defaultFont;
     private static TMP_FontAsset cachedThaiFont;
@@ -19,6 +32,8 @@ public class LocalizedText : MonoBehaviour
         if (textComponent != null)
         {
             defaultFont = textComponent.font;
+            if (englishFontSize <= 0) englishFontSize = textComponent.fontSize;
+            if (thaiFontSize <= 0) thaiFontSize = textComponent.fontSize;
         }
 
         EnsureThaiFontLoaded();
@@ -40,12 +55,19 @@ public class LocalizedText : MonoBehaviour
     void OnEnable()
     {
         LocalizationManager.OnLanguageChanged += UpdateText;
+        SettingsUI.OnFontScaleChanged += OnFontScaleChanged;
         UpdateText();
     }
 
     void OnDisable()
     {
         LocalizationManager.OnLanguageChanged -= UpdateText;
+        SettingsUI.OnFontScaleChanged -= OnFontScaleChanged;
+    }
+
+    private void OnFontScaleChanged(float scale)
+    {
+        if (scaleWithSettings) UpdateText();
     }
 
     public void SetKey(string key)
@@ -65,13 +87,37 @@ public class LocalizedText : MonoBehaviour
 
         EnsureThaiFontLoaded();
 
-        if (LocalizationManager.CurrentLanguage == Language.Thai && cachedThaiFont != null)
+        if (LocalizationManager.CurrentLanguage == Language.Thai)
         {
-            textComponent.font = cachedThaiFont;
+            if (cachedThaiFont != null)
+            {
+                textComponent.font = cachedThaiFont;
+            }
+            float scale = scaleWithSettings ? SettingsUI.CurrentFontScale : 1f;
+            if (thaiFontSize > 0)
+            {
+                textComponent.fontSize = Mathf.Round(thaiFontSize * scale);
+            }
+            if (thaiLineSpacing != 0)
+            {
+                textComponent.lineSpacing = thaiLineSpacing;
+            }
         }
-        else if (defaultFont != null)
+        else
         {
-            textComponent.font = defaultFont;
+            if (defaultFont != null)
+            {
+                textComponent.font = defaultFont;
+            }
+            float scale = scaleWithSettings ? SettingsUI.CurrentFontScale : 1f;
+            if (englishFontSize > 0)
+            {
+                textComponent.fontSize = Mathf.Round(englishFontSize * scale);
+            }
+            if (englishLineSpacing != 0)
+            {
+                textComponent.lineSpacing = englishLineSpacing;
+            }
         }
 
         if (!string.IsNullOrEmpty(localizationKey))

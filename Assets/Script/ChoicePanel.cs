@@ -57,6 +57,12 @@ public class ChoicePanel : MonoBehaviour
     public string defaultTapHint = "[ Click / Space ]";
     public string defaultHoldHint = "[ Hold Space / Click ]";
 
+    [Header("Language Specific Font Sizes")]
+    public float englishPromptFontSize = 24f;
+    public float thaiPromptFontSize = 26f;
+    public float englishChoiceFontSize = 20f;
+    public float thaiChoiceFontSize = 22f;
+
     [Header("Audio (Optional)")]
     public AudioClip openSound;
     public AudioClip tapClickSound;
@@ -82,6 +88,37 @@ public class ChoicePanel : MonoBehaviour
         CacheInitialPosition();
         SetupButtonListeners();
         ApplyStyles();
+
+        // ChoicePanel should always start hidden until explicitly shown by DialogueManager
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = 0f;
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.interactable = false;
+        }
+        gameObject.SetActive(false);
+    }
+
+    void OnEnable()
+    {
+        SettingsUI.OnFontScaleChanged += HandleFontScaleChanged;
+        LocalizationManager.OnLanguageChanged += HandleLanguageChanged;
+    }
+
+    void OnDisable()
+    {
+        SettingsUI.OnFontScaleChanged -= HandleFontScaleChanged;
+        LocalizationManager.OnLanguageChanged -= HandleLanguageChanged;
+    }
+
+    private void HandleFontScaleChanged(float scale)
+    {
+        ApplyChoiceTypography();
+    }
+
+    private void HandleLanguageChanged()
+    {
+        ApplyChoiceTypography();
     }
 
     void CacheInitialPosition()
@@ -164,7 +201,31 @@ public class ChoicePanel : MonoBehaviour
             holdHintText.text = defaultHoldHint;
         }
 
+        ApplyChoiceTypography();
+
         ResetVisuals();
+    }
+
+    public void ApplyChoiceTypography()
+    {
+        bool isThai = LocalizationManager.CurrentLanguage == Language.Thai;
+        float scale = SettingsUI.CurrentFontScale;
+
+        if (promptText != null)
+        {
+            float pSize = isThai ? thaiPromptFontSize : englishPromptFontSize;
+            if (pSize > 0) promptText.fontSize = Mathf.Round(pSize * scale);
+        }
+        if (tapChoiceText != null)
+        {
+            float cSize = isThai ? thaiChoiceFontSize : englishChoiceFontSize;
+            if (cSize > 0) tapChoiceText.fontSize = Mathf.Round(cSize * scale);
+        }
+        if (holdChoiceText != null)
+        {
+            float cSize = isThai ? thaiChoiceFontSize : englishChoiceFontSize;
+            if (cSize > 0) holdChoiceText.fontSize = Mathf.Round(cSize * scale);
+        }
     }
 
     public void Show()

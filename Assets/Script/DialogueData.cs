@@ -21,6 +21,12 @@ public class BranchDialogue
     public float textSpeed = 0.03f;
     public AudioClip soundEffect;
 
+    [Header("Font Size Override (Optional)")]
+    [Tooltip("Override font size for English on this element (0 to use DialogueManager setting)")]
+    public float englishFontSize = 0f;
+    [Tooltip("Override font size for Thai on this element (0 to use DialogueManager setting)")]
+    public float thaiFontSize = 0f;
+
     [Header("Background Music")]
     [Tooltip("Background music to play for this branch element. Leave empty to continue current music.")]
     public AudioClip backgroundMusic;
@@ -59,6 +65,12 @@ public class DialogueData
     public string textThai = "";
 
     public float textSpeed = 0.03f;
+
+    [Header("Font Size Override (Optional)")]
+    [Tooltip("Override font size for English on this element (0 to use DialogueManager setting)")]
+    public float englishFontSize = 0f;
+    [Tooltip("Override font size for Thai on this element (0 to use DialogueManager setting)")]
+    public float thaiFontSize = 0f;
 
     [Header("Sound Effect")]
     public AudioClip soundEffect;

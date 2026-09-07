@@ -1,0 +1,14 @@
+# Unity line endings
+*.cs text diff=csharp
+*.asset merge=unityyamlmerge eol=lf
+*.unity merge=unityyamlmerge eol=lf
+*.prefab merge=unityyamlmerge eol=lf
+*.mat merge=unityyamlmerge eol=lf
+
+# GitHub Linguist configuration (forces repository language stats to 100% C#)
+*.shader linguist-vendored
+*.cginc linguist-vendored
+*.hlsl linguist-vendored
+*.py linguist-vendored
+*.bitsyfont linguist-vendored
+Assets/TextMesh Pro/** linguist-vendored

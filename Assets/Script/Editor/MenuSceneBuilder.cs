@@ -60,9 +60,8 @@ public static class MenuSceneBuilder
         Canvas canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920, 1080);
-        scaler.matchWidthOrHeight = 0.5f;
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
+        scaler.scaleFactor = 1f;
         canvasObj.AddComponent<GraphicRaycaster>();
 
         // 5. Main Menu UI Root
@@ -187,7 +186,7 @@ public static class MenuSceneBuilder
         menuUI.defaultPlayScene = "First";
 
         // Assign menu BGM if found
-        AudioClip bgm = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sound/snoring-wolf-sfx.mp3");
+        AudioClip bgm = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sound/SIGNALIS - 3000 Cycles (I missed you) [Extended].mp3");
         if (bgm != null)
         {
             menuUI.menuBGM = bgm;
@@ -223,25 +222,35 @@ public static class MenuSceneBuilder
         StretchFull(inGameRoot.GetComponent<RectTransform>());
         InGameMenuUI igm = inGameRoot.GetComponent<InGameMenuUI>();
 
-        // 1. HUD Button (Top Right)
-        GameObject hudBtnObj = new GameObject("PauseHUDButton", typeof(RectTransform), typeof(Image), typeof(Button));
+        // 1. HUD Button (Top Right) - Setting Orb Button
+        GameObject hudBtnObj = new GameObject("SettingHUDButton", typeof(RectTransform), typeof(Image), typeof(Button));
         hudBtnObj.transform.SetParent(inGameRoot.transform, false);
         RectTransform hudRect = hudBtnObj.GetComponent<RectTransform>();
         hudRect.anchorMin = new Vector2(1f, 1f);
         hudRect.anchorMax = new Vector2(1f, 1f);
         hudRect.pivot = new Vector2(1f, 1f);
         hudRect.anchoredPosition = new Vector2(-28f, -28f);
-        hudRect.sizeDelta = new Vector2(148f, 44f);
+        hudRect.sizeDelta = new Vector2(58f, 50f);
 
         Image hudImg = hudBtnObj.GetComponent<Image>();
-        hudImg.color = ButtonNormalColor;
+        Sprite settingSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/SettingButton.png");
+        if (settingSprite != null)
+        {
+            hudImg.sprite = settingSprite;
+            hudImg.color = Color.white;
+            hudImg.preserveAspect = true;
+        }
+        else
+        {
+            hudImg.color = ButtonNormalColor;
+        }
         Button hudBtn = hudBtnObj.GetComponent<Button>();
-        ConfigureButtonColors(hudBtn, hudImg);
-
-        GameObject hudTextObj = CreateText(hudBtnObj, "Text", "Menu / Save", 16, TextAlignmentOptions.Center, TextPrimaryColor, true);
-        StretchFull(hudTextObj.GetComponent<RectTransform>());
-        LocalizedText hudLoc = hudTextObj.AddComponent<LocalizedText>();
-        hudLoc.localizationKey = "pause_button_hud";
+        ColorBlock cb = hudBtn.colors;
+        cb.normalColor = Color.white;
+        cb.highlightedColor = new Color(1f, 0.9f, 0.98f, 1f);
+        cb.pressedColor = new Color(0.85f, 0.7f, 0.85f, 1f);
+        cb.selectedColor = Color.white;
+        hudBtn.colors = cb;
 
         igm.hudMenuButton = hudBtn;
 
@@ -317,6 +326,61 @@ public static class MenuSceneBuilder
         Debug.Log("<color=green>[MenuSceneBuilder] First.unity updated with In-Game Menu and saved!</color>");
     }
 
+    [MenuItem("Tools/Towel Blanket/Update Settings Modals In All Scenes", false, 15)]
+    public static void UpdateSettingsModalsInAllScenes()
+    {
+        string currentScene = EditorSceneManager.GetActiveScene().path;
+
+        UpdateSettingsModalInScene("Assets/Scenes/MainMenu.unity", isMainMenu: true);
+        UpdateSettingsModalInScene("Assets/Scenes/First.unity", isMainMenu: false);
+
+        if (!string.IsNullOrEmpty(currentScene) && File.Exists(currentScene))
+        {
+            EditorSceneManager.OpenScene(currentScene);
+        }
+        Debug.Log("<color=green>[MenuSceneBuilder] Settings modals updated in all scenes successfully!</color>");
+    }
+
+    private static void UpdateSettingsModalInScene(string scenePath, bool isMainMenu)
+    {
+        if (!File.Exists(scenePath)) return;
+
+        EditorSceneManager.OpenScene(scenePath);
+
+        Canvas canvas = UnityEngine.Object.FindAnyObjectByType<Canvas>();
+        if (canvas == null) return;
+
+        SettingsUI existingModal = UnityEngine.Object.FindAnyObjectByType<SettingsUI>(FindObjectsInactive.Include);
+        if (existingModal != null)
+        {
+            UnityEngine.Object.DestroyImmediate(existingModal.gameObject);
+        }
+
+        SettingsUI newModal = CreateSettingsModal(canvas.gameObject);
+
+        if (isMainMenu)
+        {
+            MainMenuUI menuUI = UnityEngine.Object.FindAnyObjectByType<MainMenuUI>(FindObjectsInactive.Include);
+            if (menuUI != null)
+            {
+                menuUI.settingsDialog = newModal;
+                EditorUtility.SetDirty(menuUI);
+            }
+        }
+        else
+        {
+            InGameMenuUI igm = UnityEngine.Object.FindAnyObjectByType<InGameMenuUI>(FindObjectsInactive.Include);
+            if (igm != null)
+            {
+                igm.settingsDialog = newModal;
+                EditorUtility.SetDirty(igm);
+            }
+        }
+
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        EditorSceneManager.SaveOpenScenes();
+    }
+
     [MenuItem("Tools/Towel Blanket/3. Update Build Settings", false, 3)]
     public static void UpdateBuildSettings()
     {
@@ -365,7 +429,7 @@ public static class MenuSceneBuilder
         cardRect.anchorMax = new Vector2(0.5f, 0.5f);
         cardRect.pivot = new Vector2(0.5f, 0.5f);
         cardRect.anchoredPosition = Vector2.zero;
-        cardRect.sizeDelta = new Vector2(620f, 560f);
+        cardRect.sizeDelta = new Vector2(620f, 620f);
         Image cardImg = card.GetComponent<Image>();
         cardImg.color = CardBgColor;
 
@@ -382,29 +446,29 @@ public static class MenuSceneBuilder
         // Audio Header
         GameObject aHeader = CreateText(card, "AudioHeader", "Audio Settings", 20, TextAlignmentOptions.Left, AccentColor, true);
         RectTransform ahRect = aHeader.GetComponent<RectTransform>();
-        ahRect.anchoredPosition = new Vector2(-40f, 175f);
+        ahRect.anchoredPosition = new Vector2(-40f, 205f);
         ahRect.sizeDelta = new Vector2(460f, 30f);
         aHeader.AddComponent<LocalizedText>().localizationKey = "settings_audio_header";
 
         // Master Slider Row
-        var (masterSlider, masterVal) = CreateSliderRow(card, "MasterSliderRow", "Master Volume", "settings_master", 125f);
+        var (masterSlider, masterVal) = CreateSliderRow(card, "MasterSliderRow", "Master Volume", "settings_master", 160f);
         sui.masterSlider = masterSlider;
         sui.masterValueText = masterVal;
 
         // BGM Slider Row
-        var (bgmSlider, bgmVal) = CreateSliderRow(card, "BGMSliderRow", "Music (BGM)", "settings_bgm", 70f);
+        var (bgmSlider, bgmVal) = CreateSliderRow(card, "BGMSliderRow", "Music (BGM)", "settings_bgm", 110f);
         sui.bgmSlider = bgmSlider;
         sui.bgmValueText = bgmVal;
 
         // SFX Slider Row
-        var (sfxSlider, sfxVal) = CreateSliderRow(card, "SFXSliderRow", "Sound Effects (SFX)", "settings_sfx", 15f);
+        var (sfxSlider, sfxVal) = CreateSliderRow(card, "SFXSliderRow", "Sound Effects (SFX)", "settings_sfx", 60f);
         sui.sfxSlider = sfxSlider;
         sui.sfxValueText = sfxVal;
 
-        // Language Header
-        GameObject lHeader = CreateText(card, "LangHeader", "Language Settings", 20, TextAlignmentOptions.Left, AccentColor, true);
+        // Language & Text Header
+        GameObject lHeader = CreateText(card, "LangHeader", "Language & Text", 20, TextAlignmentOptions.Left, AccentColor, true);
         RectTransform lhRect = lHeader.GetComponent<RectTransform>();
-        lhRect.anchoredPosition = new Vector2(-40f, -45f);
+        lhRect.anchoredPosition = new Vector2(-40f, 5f);
         lhRect.sizeDelta = new Vector2(460f, 30f);
         lHeader.AddComponent<LocalizedText>().localizationKey = "settings_lang_header";
 
@@ -412,8 +476,8 @@ public static class MenuSceneBuilder
         GameObject langRow = new GameObject("LanguageRow", typeof(RectTransform));
         langRow.transform.SetParent(card.transform, false);
         RectTransform lrRect = langRow.GetComponent<RectTransform>();
-        lrRect.anchoredPosition = new Vector2(0f, -95f);
-        lrRect.sizeDelta = new Vector2(500f, 48f);
+        lrRect.anchoredPosition = new Vector2(0f, -45f);
+        lrRect.sizeDelta = new Vector2(500f, 44f);
 
         // English Button
         Button enBtn = CreateLangButton(langRow, "EnglishButton", "English", new Vector2(-125f, 0f));
@@ -427,8 +491,16 @@ public static class MenuSceneBuilder
         sui.thaiButtonBg = thBtn.GetComponent<Image>();
         sui.thaiButtonText = thBtn.GetComponentInChildren<TMP_Text>();
 
+        // Font Size Slider Row
+        var (fontSizeSlider, fontSizeVal) = CreateSliderRow(card, "FontSizeSliderRow", "Text Size", "settings_font_size", -105f);
+        fontSizeSlider.minValue = SettingsUI.MIN_FONT_SIZE_SCALE;
+        fontSizeSlider.maxValue = SettingsUI.MAX_FONT_SIZE_SCALE;
+        fontSizeSlider.value = SettingsUI.CurrentFontScale;
+        sui.fontSizeSlider = fontSizeSlider;
+        sui.fontSizeValueText = fontSizeVal;
+
         // Close / Back Button
-        Button closeBtn = CreateStyledButton(card, "CloseButton", "Back", "settings_back", new Vector2(0f, -215f), new Vector2(260f, 48f));
+        Button closeBtn = CreateStyledButton(card, "CloseButton", "Back", "settings_back", new Vector2(0f, -235f), new Vector2(260f, 48f));
         sui.closeButton = closeBtn;
 
         modalObj.SetActive(false);
@@ -654,7 +726,11 @@ public static class MenuSceneBuilder
     [MenuItem("Tools/Towel Blanket/5. Setup Thai Font Asset and Fallbacks", false, 5)]
     public static void SetupThaiFontSupport()
     {
-        string fontPath = "Assets/Fonts/LeelawUI.ttf";
+        string fontPath = "Assets/Fonts/Thai_nuttatulipa.ttf";
+        if (!File.Exists(fontPath))
+        {
+            fontPath = "Assets/Fonts/LeelawUI.ttf";
+        }
         if (!File.Exists(fontPath))
         {
             fontPath = "Assets/Fonts/tahoma.ttf";
@@ -840,6 +916,41 @@ public static class MenuSceneBuilder
         }
     }
 
+    [MenuItem("Tools/Towel Blanket/7. Setup Intro and Ending Screens in First Scene", false, 7)]
+    public static void SetupIntroAndEndingInFirstScene()
+    {
+        EditorSceneManager.OpenScene("Assets/Scenes/First.unity");
+        DialogueManager dm = UnityEngine.Object.FindAnyObjectByType<DialogueManager>();
+        if (dm != null)
+        {
+            dm.enableIntroQuote = true;
+            dm.introQuoteThai = "ยามนั้นเมื่ออดัมและอีฟกัดผลแห่งปัญญา พวกเราก็ร่วงหล่นจากสวนอีเดนตลอดกาล -----------------------------------------------------------------";
+            dm.introQuoteEnglish = "At that time, when Adam and Eve bit into the fruit of wisdom, we fell from the Garden of Eden forever -----------------------------------------------------------------";
+            dm.introQuoteEnglishFontSize = 24f;
+            dm.introQuoteThaiFontSize = 26f;
+            dm.introQuoteEnglishHintFontSize = 15f;
+            dm.introQuoteThaiHintFontSize = 16f;
+
+            dm.enableEndingScreen = true;
+            dm.endingTextThai = "ผ้าม่านยังคงปลิวไสวอยู่เหนือหัว";
+            dm.endingTextEnglish = "The curtains still flutter overhead.";
+            dm.endingEnglishFontSize = 32f;
+            dm.endingThaiFontSize = 34f;
+            dm.endingEnglishHintFontSize = 15f;
+            dm.endingThaiHintFontSize = 16f;
+
+            dm.overrideExistingMusic = false;
+            dm.keepBGMContinuous = true;
+
+            dm.EnsureIntroAndEndingUI();
+
+            EditorUtility.SetDirty(dm);
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            EditorSceneManager.SaveOpenScenes();
+            Debug.Log("<color=green>[MenuSceneBuilder] First.unity updated with Intro Quote and Ending Screen!</color>");
+        }
+    }
+
     [MenuItem("Tools/Towel Blanket/Setup Everything (Menu, InGame, Thai Font, Build Settings)", false, 0)]
     public static void SetupEverything()
     {
@@ -847,6 +958,7 @@ public static class MenuSceneBuilder
         BuildMainMenuScene();
         SetupInGameMenuInFirstScene();
         SetupThaiDialogueInFirstScene();
+        SetupIntroAndEndingInFirstScene();
         UpdateBuildSettings();
         Debug.Log("<color=green>[MenuSceneBuilder] ALL SYSTEMS SETUP COMPLETE!</color>");
     }

@@ -2,8 +2,17 @@ using UnityEngine;
 
 public class AudioManager : MonoBehaviour
 {
+    [Header("Audio Sources")]
     public AudioSource bgmSource;
     public AudioSource sfxSource;
+
+    [Header("Background Music")]
+    [Tooltip("Default background music to play automatically. Loops and persists across all scenes via DontDestroyOnLoad.")]
+    public AudioClip defaultBGM;
+    [Tooltip("Play defaultBGM automatically when AudioManager starts if no music is playing.")]
+    public bool playOnAwake = true;
+    [Tooltip("If another AudioManager in a new scene has a defaultBGM, override current music?")]
+    public bool overrideExistingBGM = false;
 
     public static AudioManager Instance { get; private set; }
 
@@ -11,6 +20,7 @@ public class AudioManager : MonoBehaviour
     public const string PREF_BGM_VOLUME = "Audio_BGMVolume";
     public const string PREF_SFX_VOLUME = "Audio_SFXVolume";
 
+    [Header("Volume Settings")]
     [Range(0f, 1f)] public float masterVolume = 1f;
     [Range(0f, 1f)] public float bgmVolume = 0.8f;
     [Range(0f, 1f)] public float sfxVolume = 1f;
@@ -23,15 +33,26 @@ public class AudioManager : MonoBehaviour
             transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
             LoadVolumeSettings();
+            EnsureAudioSources();
+            ApplyVolumes();
+
+            if (playOnAwake && defaultBGM != null)
+            {
+                PlayBGM(defaultBGM);
+            }
         }
         else if (Instance != this)
         {
+            if (defaultBGM != null && (!Instance.IsBGMPlaying() || overrideExistingBGM))
+            {
+                if (Instance.GetCurrentBGM() != defaultBGM || !Instance.IsBGMPlaying())
+                {
+                    Instance.PlayBGM(defaultBGM);
+                }
+            }
             Destroy(gameObject);
             return;
         }
-
-        EnsureAudioSources();
-        ApplyVolumes();
     }
 
     public void LoadVolumeSettings()
@@ -148,6 +169,32 @@ public class AudioManager : MonoBehaviour
         {
             bgmSource.Stop();
             bgmSource.clip = null;
+        }
+    }
+
+    public bool IsBGMPlaying()
+    {
+        return bgmSource != null && bgmSource.isPlaying;
+    }
+
+    public AudioClip GetCurrentBGM()
+    {
+        return bgmSource != null ? bgmSource.clip : null;
+    }
+
+    public void PauseBGM()
+    {
+        if (bgmSource != null)
+        {
+            bgmSource.Pause();
+        }
+    }
+
+    public void ResumeBGM()
+    {
+        if (bgmSource != null)
+        {
+            bgmSource.UnPause();
         }
     }
 

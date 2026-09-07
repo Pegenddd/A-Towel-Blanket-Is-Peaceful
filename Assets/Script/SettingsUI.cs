@@ -25,6 +25,37 @@ public class SettingsUI : MonoBehaviour
     public Image thaiButtonBg;
     public TMP_Text thaiButtonText;
 
+    [Header("Font Size Controls")]
+    public Slider fontSizeSlider;
+    public TMP_Text fontSizeValueText;
+
+    public const string PREF_FONT_SIZE_SCALE = "Settings_FontSizeScale";
+    public const float DEFAULT_FONT_SIZE_SCALE = 1.0f;
+    public const float MIN_FONT_SIZE_SCALE = 0.75f;
+    public const float MAX_FONT_SIZE_SCALE = 1.50f;
+
+    public static bool IsOpen { get; private set; } = false;
+
+    public static event Action<float> OnFontScaleChanged;
+
+    public static float CurrentFontScale
+    {
+        get => PlayerPrefs.GetFloat(PREF_FONT_SIZE_SCALE, DEFAULT_FONT_SIZE_SCALE);
+        set
+        {
+            float clamped = Mathf.Clamp(value, MIN_FONT_SIZE_SCALE, MAX_FONT_SIZE_SCALE);
+            PlayerPrefs.SetFloat(PREF_FONT_SIZE_SCALE, clamped);
+            PlayerPrefs.Save();
+            OnFontScaleChanged?.Invoke(clamped);
+        }
+    }
+
+    public static float GetScaledFontSize(float baseSize)
+    {
+        if (baseSize <= 0) return baseSize;
+        return Mathf.Round(baseSize * CurrentFontScale);
+    }
+
     [Header("Buttons")]
     public Button closeButton;
 
@@ -51,6 +82,7 @@ public class SettingsUI : MonoBehaviour
 
     void OnDisable()
     {
+        IsOpen = false;
         LocalizationManager.OnLanguageChanged -= RefreshLanguageButtons;
     }
 
@@ -74,6 +106,14 @@ public class SettingsUI : MonoBehaviour
             sfxSlider.onValueChanged.AddListener(OnSFXSliderChanged);
         }
 
+        if (fontSizeSlider != null)
+        {
+            fontSizeSlider.minValue = MIN_FONT_SIZE_SCALE;
+            fontSizeSlider.maxValue = MAX_FONT_SIZE_SCALE;
+            fontSizeSlider.onValueChanged.RemoveAllListeners();
+            fontSizeSlider.onValueChanged.AddListener(OnFontSizeSliderChanged);
+        }
+
         if (englishButton != null)
         {
             englishButton.onClick.RemoveAllListeners();
@@ -95,6 +135,7 @@ public class SettingsUI : MonoBehaviour
 
     public void Open(Action onCloseCallback = null)
     {
+        IsOpen = true;
         OnClosed = onCloseCallback;
         if (panelRoot != null) panelRoot.SetActive(true);
         gameObject.SetActive(true);
@@ -103,6 +144,7 @@ public class SettingsUI : MonoBehaviour
 
     public void Close()
     {
+        IsOpen = false;
         if (panelRoot != null) panelRoot.SetActive(false);
         gameObject.SetActive(false);
         OnClosed?.Invoke();
@@ -137,6 +179,15 @@ public class SettingsUI : MonoBehaviour
         {
             sfxSlider.SetValueWithoutNotify(sfx);
             UpdateSliderLabel(sfxValueText, sfx);
+        }
+
+        float fontScale = CurrentFontScale;
+        if (fontSizeSlider != null)
+        {
+            fontSizeSlider.minValue = MIN_FONT_SIZE_SCALE;
+            fontSizeSlider.maxValue = MAX_FONT_SIZE_SCALE;
+            fontSizeSlider.SetValueWithoutNotify(fontScale);
+            UpdateSliderLabel(fontSizeValueText, fontScale);
         }
 
         RefreshLanguageButtons();
@@ -183,6 +234,13 @@ public class SettingsUI : MonoBehaviour
             PlayerPrefs.SetFloat(AudioManager.PREF_SFX_VOLUME, val);
             PlayerPrefs.Save();
         }
+    }
+
+    private void OnFontSizeSliderChanged(float val)
+    {
+        float stepped = Mathf.Round(val * 20f) / 20f;
+        UpdateSliderLabel(fontSizeValueText, stepped);
+        CurrentFontScale = stepped;
     }
 
     private void UpdateSliderLabel(TMP_Text label, float value)

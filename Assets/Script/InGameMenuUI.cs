@@ -8,6 +8,8 @@ public class InGameMenuUI : MonoBehaviour
 {
     [Header("HUD Trigger Button")]
     public Button hudMenuButton;
+    [Tooltip("If true, clicking the HUD gear button opens Settings directly. If false, opens the full pause menu (which also has Settings).")]
+    public bool hudOpensSettingsDirectly = false;
 
     [Header("Pause Overlay")]
     public GameObject pausePanel;
@@ -70,7 +72,7 @@ public class InGameMenuUI : MonoBehaviour
         if (hudMenuButton != null)
         {
             hudMenuButton.onClick.RemoveAllListeners();
-            hudMenuButton.onClick.AddListener(OpenPauseMenu);
+            hudMenuButton.onClick.AddListener(OnHudButtonClicked);
         }
 
         if (resumeButton != null)
@@ -95,6 +97,18 @@ public class InGameMenuUI : MonoBehaviour
         {
             mainMenuButton.onClick.RemoveAllListeners();
             mainMenuButton.onClick.AddListener(ReturnToMainMenu);
+        }
+    }
+
+    private void OnHudButtonClicked()
+    {
+        if (hudOpensSettingsDirectly)
+        {
+            OpenSettings();
+        }
+        else
+        {
+            OpenPauseMenu();
         }
     }
 
@@ -144,9 +158,21 @@ public class InGameMenuUI : MonoBehaviour
 
     public void OpenSettings()
     {
+        isPaused = true;
+        Time.timeScale = 0f;
         if (settingsDialog != null)
         {
-            settingsDialog.Open();
+            settingsDialog.Open(() =>
+            {
+                if (pausePanel != null && pausePanel.activeSelf)
+                {
+                    // Stay paused if full pause menu is open
+                }
+                else
+                {
+                    ResumeGame();
+                }
+            });
         }
     }
 
