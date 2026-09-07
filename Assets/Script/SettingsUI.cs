@@ -144,10 +144,18 @@ public class SettingsUI : MonoBehaviour
 
     public void Close()
     {
+        if (!IsOpen && (panelRoot == null || !panelRoot.activeSelf) && !gameObject.activeSelf)
+        {
+            return;
+        }
+
         IsOpen = false;
         if (panelRoot != null) panelRoot.SetActive(false);
         gameObject.SetActive(false);
-        OnClosed?.Invoke();
+
+        Action callback = OnClosed;
+        OnClosed = null;
+        callback?.Invoke();
     }
 
     public void RefreshUI()

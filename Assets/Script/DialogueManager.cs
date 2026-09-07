@@ -338,7 +338,12 @@ public class DialogueManager : MonoBehaviour
         if (isIntroActive)
         {
             ApplyIntroQuoteTypography();
-            if (!isIntroTyping && introQuoteText != null)
+            if (isIntroTyping)
+            {
+                if (introTypingCoroutine != null) StopCoroutine(introTypingCoroutine);
+                isIntroTyping = false;
+            }
+            if (introQuoteText != null)
             {
                 introQuoteText.text = GetLocalizedIntroQuote();
             }
@@ -361,15 +366,34 @@ public class DialogueManager : MonoBehaviour
             }
         }
 
-        if (!isTyping && dialogueText != null)
+        if (dialogueText != null)
         {
+            string newText = null;
             if (activeBranch != null)
             {
-                dialogueText.text = activeBranch.GetLocalizedText();
+                newText = activeBranch.GetLocalizedText();
             }
-            else if (currentDialogue < dialogues.Length && dialogues[currentDialogue] != null)
+            else if (dialogues != null && currentDialogue >= 0 && currentDialogue < dialogues.Length && dialogues[currentDialogue] != null)
             {
-                dialogueText.text = dialogues[currentDialogue].GetLocalizedText();
+                newText = dialogues[currentDialogue].GetLocalizedText();
+            }
+
+            if (!string.IsNullOrEmpty(newText))
+            {
+                if (isTyping)
+                {
+                    if (typingCoroutine != null) StopCoroutine(typingCoroutine);
+                    isTyping = false;
+                    dialogueText.text = newText;
+                    if (activeBranch == null)
+                    {
+                        OnTextFinished();
+                    }
+                }
+                else
+                {
+                    dialogueText.text = newText;
+                }
             }
         }
     }

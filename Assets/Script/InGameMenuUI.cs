@@ -135,7 +135,10 @@ public class InGameMenuUI : MonoBehaviour
     {
         isPaused = false;
         if (pausePanel != null) pausePanel.SetActive(false);
-        if (settingsDialog != null) settingsDialog.Close();
+        if (settingsDialog != null && (SettingsUI.IsOpen || settingsDialog.gameObject.activeSelf))
+        {
+            settingsDialog.Close();
+        }
         Time.timeScale = 1f;
     }
 

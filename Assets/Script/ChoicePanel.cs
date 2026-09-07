@@ -77,6 +77,26 @@ public class ChoicePanel : MonoBehaviour
     private Vector3 initialHoldCardPos;
     private Coroutine fadeCoroutine;
 
+    private DialogueData currentDialogueData;
+    private TMP_FontAsset defaultPromptFont;
+    private TMP_FontAsset defaultTapChoiceFont;
+    private TMP_FontAsset defaultHoldChoiceFont;
+    private static TMP_FontAsset cachedThaiFont;
+    private static bool thaiFontLoaded = false;
+
+    private static void EnsureThaiFontLoaded()
+    {
+        if (!thaiFontLoaded)
+        {
+            cachedThaiFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/ThaiFont_SDF");
+            if (cachedThaiFont == null)
+            {
+                cachedThaiFont = Resources.Load<TMP_FontAsset>("ThaiFont_SDF");
+            }
+            thaiFontLoaded = true;
+        }
+    }
+
     public bool IsHoldingDirectly => isHoldingDirectly;
 
     void Awake()
@@ -84,6 +104,10 @@ public class ChoicePanel : MonoBehaviour
         if (panelRoot == null) panelRoot = GetComponent<RectTransform>();
         if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
         if (panelBackground == null) panelBackground = GetComponent<Image>();
+
+        if (promptText != null) defaultPromptFont = promptText.font;
+        if (tapChoiceText != null) defaultTapChoiceFont = tapChoiceText.font;
+        if (holdChoiceText != null) defaultHoldChoiceFont = holdChoiceText.font;
 
         CacheInitialPosition();
         SetupButtonListeners();
@@ -119,6 +143,24 @@ public class ChoicePanel : MonoBehaviour
     private void HandleLanguageChanged()
     {
         ApplyChoiceTypography();
+        if (currentDialogueData != null)
+        {
+            if (promptText != null)
+            {
+                string prompt = currentDialogueData.GetLocalizedChoicePrompt();
+                promptText.text = string.IsNullOrEmpty(prompt)
+                    ? (LocalizationManager.CurrentLanguage == Language.Thai ? "เลือกเส้นทาง (กดธรรมดา หรือ กดค้าง)" : "Choose your path (Tap or Hold)")
+                    : prompt;
+            }
+            if (tapChoiceText != null)
+            {
+                tapChoiceText.text = currentDialogueData.GetLocalizedTapChoice();
+            }
+            if (holdChoiceText != null)
+            {
+                holdChoiceText.text = currentDialogueData.GetLocalizedHoldChoice();
+            }
+        }
     }
 
     void CacheInitialPosition()
@@ -129,25 +171,31 @@ public class ChoicePanel : MonoBehaviour
         }
     }
 
+    private void OnTapClicked()
+    {
+        if (tapClickSound != null) PlayAudio(tapClickSound);
+        OnTapAction?.Invoke();
+    }
+
     void SetupButtonListeners()
     {
         if (tapButton != null)
         {
             tapButton.onClick.RemoveAllListeners();
-            tapButton.onClick.AddListener(() =>
-            {
-                if (tapClickSound != null) PlayAudio(tapClickSound);
-                OnTapAction?.Invoke();
-            });
+            tapButton.onClick.AddListener(OnTapClicked);
         }
 
         if (holdButton != null)
         {
             EventTrigger trigger = holdButton.gameObject.GetComponent<EventTrigger>();
-            if (trigger == null) trigger = holdButton.gameObject.AddComponent<EventTrigger>();
+            if (trigger == null)
+            {
+                trigger = holdButton.gameObject.AddComponent<EventTrigger>();
+            }
             trigger.triggers.Clear();
 
-            EventTrigger.Entry entryDown = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            EventTrigger.Entry entryDown = new EventTrigger.Entry();
+            entryDown.eventID = EventTriggerType.PointerDown;
             entryDown.callback.AddListener((data) =>
             {
                 isHoldingDirectly = true;
@@ -155,7 +203,8 @@ public class ChoicePanel : MonoBehaviour
             });
             trigger.triggers.Add(entryDown);
 
-            EventTrigger.Entry entryUp = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
+            EventTrigger.Entry entryUp = new EventTrigger.Entry();
+            entryUp.eventID = EventTriggerType.PointerUp;
             entryUp.callback.AddListener((data) =>
             {
                 isHoldingDirectly = false;
@@ -167,6 +216,7 @@ public class ChoicePanel : MonoBehaviour
 
     public void Setup(DialogueData dialogue, System.Action onTap, System.Action onHold, System.Action onHoldDown = null, System.Action onHoldUp = null)
     {
+        currentDialogueData = dialogue;
         OnTapAction = onTap;
         OnHoldAction = onHold;
         OnHoldDownAction = onHoldDown;
@@ -211,18 +261,26 @@ public class ChoicePanel : MonoBehaviour
         bool isThai = LocalizationManager.CurrentLanguage == Language.Thai;
         float scale = SettingsUI.CurrentFontScale;
 
+        EnsureThaiFontLoaded();
+        TMP_FontAsset targetPromptFont = isThai && cachedThaiFont != null ? cachedThaiFont : defaultPromptFont;
+        TMP_FontAsset targetTapFont = isThai && cachedThaiFont != null ? cachedThaiFont : defaultTapChoiceFont;
+        TMP_FontAsset targetHoldFont = isThai && cachedThaiFont != null ? cachedThaiFont : defaultHoldChoiceFont;
+
         if (promptText != null)
         {
+            if (targetPromptFont != null) promptText.font = targetPromptFont;
             float pSize = isThai ? thaiPromptFontSize : englishPromptFontSize;
             if (pSize > 0) promptText.fontSize = Mathf.Round(pSize * scale);
         }
         if (tapChoiceText != null)
         {
+            if (targetTapFont != null) tapChoiceText.font = targetTapFont;
             float cSize = isThai ? thaiChoiceFontSize : englishChoiceFontSize;
             if (cSize > 0) tapChoiceText.fontSize = Mathf.Round(cSize * scale);
         }
         if (holdChoiceText != null)
         {
+            if (targetHoldFont != null) holdChoiceText.font = targetHoldFont;
             float cSize = isThai ? thaiChoiceFontSize : englishChoiceFontSize;
             if (cSize > 0) holdChoiceText.fontSize = Mathf.Round(cSize * scale);
         }
